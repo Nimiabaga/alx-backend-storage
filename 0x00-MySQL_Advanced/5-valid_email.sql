@@ -1,25 +1,14 @@
-
--- Creates a stored procedure ComputeAverageScoreForUser that
--- computes and store the average score for a student
-DROP PROCEDURE IF EXISTS ComputeAverageScoreForUser;
+-- creates a trigger that resets the attribute valid_email
+-- only when the email has been changed
+DROP TRIGGER IF EXISTS confirm_email;
 DELIMITER //
-CREATE PROCEDURE ComputeAverageScoreForUser (user_id INT)
+CREATE TRIGGER confirm_email
+BEFORE UPDATE ON users
+FOR EACH ROW
 BEGIN
-    DECLARE total_score INT DEFAULT 0;
-    DECLARE projects_count INT DEFAULT 0;
-
-    SELECT SUM(score)
-        INTO total_score
-        FROM corrections
-        WHERE corrections.user_id = user_id;
-    SELECT COUNT(*)
-        INTO projects_count
-        FROM corrections
-        WHERE corrections.user_id = user_id;
-
-    UPDATE users
-        SET users.average_score = IF(projects_count = 0, 0, total_score / projects_count)
-        WHERE users.id = user_id;
+	IF NEW.email != OLD.email THEN
+		SET NEW.valid_email = 0;
+	END IF;
 END;
 //
 DELIMITER ;
